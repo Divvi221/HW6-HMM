@@ -61,7 +61,7 @@ class HiddenMarkovModel:
                 #forward[s,t] = 
                 sum = 0
                 for s_p in range(N):
-                    elem = forward[s_p,t-1] * self.transition_p[s_p,s] * self.emission_p[s_p,obs_ind]
+                    elem = forward[s_p,t-1] * self.transition_p[s_p,s] * self.emission_p[s,obs_ind] #changed s_p in emission to s
                     #if s_p==0:
                         #print(self.emission_p[s_p,obs_ind])
                     sum += elem
@@ -71,6 +71,7 @@ class HiddenMarkovModel:
         forward_prob = 0
         for s in range(N):
             forward_prob += forward[s,T-1]
+        #print(forward_prob)
         return forward_prob
         
 
@@ -89,24 +90,77 @@ class HiddenMarkovModel:
         """        
         
         # Step 1. Initialize variables
-        
+
+        #print(decode_observation_states)
+        #print(self.hidden_states)
+
         #store probabilities of hidden state at each step 
-        viterbi_table = np.zeros((len(decode_observation_states), len(self.hidden_states)))
+        ##viterbi_table = np.zeros((len(decode_observation_states), len(self.hidden_states))) they gave me this
+        T = len(decode_observation_states) #["sunny","rainy","rainy","sunny","rainy"]
+        N = len(self.hidden_states) #hot and cold are hidden states
+        viterbi = np.zeros((N,T))
+        pointer = np.zeros((N,T))
         #store best path for traceback
         best_path = np.zeros(len(decode_observation_states))         
-        
-       
+        #print(viterbi)
+
+        for s in range(N):
+            obs_ind = np.where(self.observation_states == decode_observation_states[0])[0][0] #find index of the first input obs states in the list of obs states 
+            viterbi[s,0] = self.prior_p[s] * self.emission_p[s,obs_ind]
+            pointer[s,0] = 0
+        #print(viterbi, pointer)
        # Step 2. Calculate Probabilities
+        for t in range(1,T):
+            obs_ind = np.where(self.observation_states == decode_observation_states[t])[0][0]
+            #backpointer = 0
+            for s in range(N):
+                max_elem = 0
+                for s_p in range(N):
+                    elem = viterbi[s_p,t-1] * self.transition_p[s_p,s] * self.emission_p[s,obs_ind]
+                    if elem>max_elem:
+                        max_elem = elem
+                        #print(max_elem)
+                        #backpointer = s_p
+                viterbi[s,t] = max_elem
+                #pointer[s,t] = backpointer
+        index = []
+        for t in viterbi.T:
+            #print(t)
+            elem = max(t)
+            ind = np.where(t==elem)[0][0]
+            index.append(ind)
+        
+        for t in range(0,T):
+            for s in range(N):
+                pointer[s,t] = index[t]
+        
+        print(pointer)
+        print(viterbi)
 
-            
         # Step 3. Traceback 
-
+        best_prob = []
+        for s in range(N):
+            best_prob.append(viterbi[s,T-1])
+        best_path_prob = max(best_prob)
+        best_path_pointer = np.argmax(best_prob)
+        
+        #print(best_prob)
+        #print(best_path_pointer)
+        hidden_state_seq = []
+        for i in pointer[best_path_pointer,:]:
+            #print(i)
+            #print(self.hidden_states)
+            hidden_elem = self.hidden_states[int(i)]
+            hidden_state_seq.append(hidden_elem)
 
         # Step 4. Return best hidden state sequence 
+        return hidden_state_seq
         
 #testing and debugging
 mini_hmm=np.load('./data/mini_weather_hmm.npz')
 mini_hmm_seq=np.load('./data/mini_weather_sequences.npz')
-#print(mini_hmm.keys())
+print(mini_hmm["hidden_states"])
 hmm = HiddenMarkovModel(mini_hmm["observation_states"],mini_hmm["hidden_states"],mini_hmm["prior_p"],mini_hmm["transition_p"],mini_hmm["emission_p"])
 hmm_forward = hmm.forward(mini_hmm_seq["observation_state_sequence"])
+hmm_vit = hmm.viterbi(mini_hmm_seq["observation_state_sequence"])
+print(mini_hmm_seq["best_hidden_state_sequence"])
