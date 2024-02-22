@@ -134,8 +134,8 @@ class HiddenMarkovModel:
             for s in range(N):
                 pointer[s,t] = index[t]
         
-        print(pointer)
-        print(viterbi)
+        #print(pointer)
+        #print(viterbi)
 
         # Step 3. Traceback 
         best_prob = []
@@ -156,11 +156,3 @@ class HiddenMarkovModel:
         # Step 4. Return best hidden state sequence 
         return hidden_state_seq
         
-#testing and debugging
-mini_hmm=np.load('./data/mini_weather_hmm.npz')
-mini_hmm_seq=np.load('./data/mini_weather_sequences.npz')
-print(mini_hmm["hidden_states"])
-hmm = HiddenMarkovModel(mini_hmm["observation_states"],mini_hmm["hidden_states"],mini_hmm["prior_p"],mini_hmm["transition_p"],mini_hmm["emission_p"])
-hmm_forward = hmm.forward(mini_hmm_seq["observation_state_sequence"])
-hmm_vit = hmm.viterbi(mini_hmm_seq["observation_state_sequence"])
-print(mini_hmm_seq["best_hidden_state_sequence"])

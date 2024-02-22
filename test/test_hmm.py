@@ -22,14 +22,15 @@ def test_mini_weather():
     mini_hmm=np.load('./data/mini_weather_hmm.npz')
     mini_input=np.load('./data/mini_weather_sequences.npz')
 
-
-
-
-
-
-    
-   
-    pass
+    hmm = HiddenMarkovModel(mini_hmm["observation_states"],mini_hmm["hidden_states"],mini_hmm["prior_p"],mini_hmm["transition_p"],mini_hmm["emission_p"])
+    hmm_forward = hmm.forward(mini_input["observation_state_sequence"])
+    hmm_vit = hmm.viterbi(mini_input["observation_state_sequence"])
+    #print(mini_input["best_hidden_state_sequence"])
+    tol = 1e-4
+    hmm_forward_true = 0.03506 #hand calculated probability
+    assert (hmm_forward - 0.03506) <= tol #checking forward prob
+    assert np.all(hmm_vit == mini_input["best_hidden_state_sequence"]) #checking to see if the hidden sequence is correct
+    assert len(hmm_vit) == len(mini_input["best_hidden_state_sequence"]) #checking length of hidden sequence
 
 
 
@@ -48,8 +49,7 @@ def test_full_weather():
     pass
 
 
-
-
+test_mini_weather()
 
 
 
