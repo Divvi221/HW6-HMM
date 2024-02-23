@@ -134,7 +134,7 @@ class HiddenMarkovModel:
             for s in range(N):
                 pointer[s,t] = index[t]
         
-        #print(pointer)
+        print(pointer)
         #print(viterbi)
 
         # Step 3. Traceback 
@@ -156,3 +156,14 @@ class HiddenMarkovModel:
         # Step 4. Return best hidden state sequence 
         return hidden_state_seq
         
+
+#testing
+full_hmm=np.load('./data/full_weather_hmm.npz')
+full_input=np.load('./data/full_weather_sequences.npz')
+
+hmm = HiddenMarkovModel(full_hmm["observation_states"],full_hmm["hidden_states"],full_hmm["prior_p"],full_hmm["transition_p"],full_hmm["emission_p"])
+hmm_forward = hmm.forward(full_input["observation_state_sequence"])
+hmm_vit = hmm.viterbi(full_input["observation_state_sequence"])
+
+print(full_input["best_hidden_state_sequence"])
+print(hmm_vit)
